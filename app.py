@@ -16,7 +16,13 @@ from config import (
     SITE_TAGLINE,
     get_section,
 )
-from database import count_articles, get_article_by_slug, get_feed, get_top_by_section, init_db
+from database import (
+    count_articles,
+    get_article_by_slug,
+    get_feed,
+    get_top_by_section,
+    init_db,
+)
 from parser import ensure_article_content
 from rates import format_change, format_price, get_rates
 
@@ -25,6 +31,14 @@ logger = logging.getLogger("novosti")
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+
+# ВАЖНО: создаём таблицы базы данных при старте приложения.
+# Без этого Render запускает сайт, но таблицы articles ещё нет.
+try:
+    init_db()
+    logger.info("Database initialized successfully")
+except Exception as e:
+    logger.error("Database initialization failed: %s", e)
 
 
 def format_date(iso_str: str) -> str:
@@ -61,12 +75,20 @@ app.jinja_env.filters["fmtchg"] = format_change
 @app.errorhandler(500)
 def error_500(e):
     logger.error("500 error: %s", traceback.format_exc())
-    return render_template("error.html", code=500, message="Внутренняя ошибка сервера"), 500
+    return render_template(
+        "error.html",
+        code=500,
+        message="Внутренняя ошибка сервера",
+    ), 500
 
 
 @app.errorhandler(404)
 def error_404(e):
-    return render_template("error.html", code=404, message="Страница не найдена"), 404
+    return render_template(
+        "error.html",
+        code=404,
+        message="Страница не найдена",
+    ), 404
 
 
 @app.context_processor
@@ -89,7 +111,11 @@ def inject_globals():
 
 
 def _render_feed(category_slug: str | None, page: int):
-    articles = get_feed(page=page, per_page=FEED_PER_PAGE, category_slug=category_slug)
+    articles = get_feed(
+        page=page,
+        per_page=FEED_PER_PAGE,
+        category_slug=category_slug,
+    )
     total = count_articles(category_slug=category_slug)
     total_pages = max(1, (total + FEED_PER_PAGE - 1) // FEED_PER_PAGE)
     section = get_section(category_slug) if category_slug else None
@@ -108,13 +134,17 @@ def _render_feed(category_slug: str | None, page: int):
 @app.route("/")
 def home():
     page = request.args.get("page", 1, type=int)
+
+    total = count_articles()
+    total_pages = max(1, (total + FEED_PER_PAGE - 1) // FEED_PER_PAGE)
+
     return render_template(
         "home.html",
         articles=get_feed(page=page, per_page=FEED_PER_PAGE),
         top_by_section=get_top_by_section(limit=4),
         page=page,
-        total_pages=max(1, (count_articles() + FEED_PER_PAGE - 1) // FEED_PER_PAGE),
-        total=count_articles(),
+        total_pages=total_pages,
+        total=total,
         current_slug=None,
     )
 
@@ -133,25 +163,38 @@ def article(slug: str):
 
     content = art.get("content") or art.get("summary") or art.get("title") or ""
     paragraphs = [p.strip() for p in content.split("\n\n") if p.strip()]
+
     if not paragraphs:
         paragraphs = [content]
 
-    return render_template("article.html", article=art, paragraphs=paragraphs, current_slug=None)
+    return render_template(
+        "article.html",
+        article=art,
+        paragraphs=paragraphs,
+        current_slug=None,
+    )
 
 
 @app.route("/<slug>")
 def section_feed(slug: str):
     if slug not in SECTIONS:
         abort(404)
+
     page = request.args.get("page", 1, type=int)
     return _render_feed(slug, page)
 
 
 @app.route("/health")
 def health():
-    return {"status": "ok", "articles": count_articles()}
+    return {
+        "status": "ok",
+        "articles": count_articles(),
+    }
 
 
 def create_app():
-    init_db()
     return app
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
