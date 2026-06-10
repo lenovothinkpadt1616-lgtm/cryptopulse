@@ -1,0 +1,9 @@
+<nav class="pagination">
+    {% if page > 1 %}
+    <a href="?page={{ page - 1 }}" class="pg-btn">← Назад</a>
+    {% endif %}
+    <span>{{ page }} / {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="?page={{ page + 1 }}" class="pg-btn">Далее →</a>
+    {% endif %}
+</nav>

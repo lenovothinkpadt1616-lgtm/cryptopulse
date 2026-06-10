@@ -1,0 +1,15 @@
+[Unit]
+Description=CryptoPulse News Site
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/cryptopulse
+Environment=PATH=/opt/cryptopulse/venv/bin
+ExecStart=/opt/cryptopulse/venv/bin/python run.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

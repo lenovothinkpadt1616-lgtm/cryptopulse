@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<article class="article">
+    <div class="article__meta">
+        <a href="/{{ article.category_slug }}" class="tag tag--{{ article.category_slug }}">{{ article.category }}</a>
+        <time>{{ article.published_at|fmtdate }}</time>
+    </div>
+    <h1 class="article__title">{{ article.title }}</h1>
+    {% if article.image_url %}
+    <figure class="article__photo">
+        <img src="{{ article.image_url }}" alt="{{ article.title }}" onerror="this.parentElement.remove()">
+    </figure>
+    {% endif %}
+    <div class="article__text">
+        {% for p in paragraphs %}
+        <p>{{ p }}</p>
+        {% endfor %}
+    </div>
+    <p class="article__back"><a href="/{{ article.category_slug }}">← {{ article.category }}</a></p>
+</article>
+{% endblock %}

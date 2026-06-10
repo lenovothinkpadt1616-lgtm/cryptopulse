@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_name }}{% endblock %}</title>
+    <meta name="description" content="{{ site_tagline }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header class="topbar">
+        <div class="container topbar__row">
+            <div class="topbar__rates">
+                {% if rates.usd_rub and rates.usd_rub > 0 %}
+                <span>USD/RUB <strong>{{ "%.2f"|format(rates.usd_rub) }}</strong></span>
+                {% endif %}
+                {% for coin in rates.coins %}
+                {% if coin.usd and coin.usd > 0 %}
+                <span>{{ coin.symbol }} <strong>{{ coin.usd|fmtprice('usd') }}</strong>
+                    <em class="{% if (coin.change_24h or 0) >= 0 %}chg-up{% else %}chg-down{% endif %}">{{ coin.change_24h|fmtchg }}</em>
+                </span>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <time class="topbar__time" id="clock"></time>
+        </div>
+    </header>
+
+    <header class="header">
+        <div class="container header__row">
+            <a href="/" class="brand">{{ site_name }}</a>
+            <nav class="menu">
+                <a href="/" class="menu__item {% if current_slug is none and request.endpoint == 'home' %}is-active{% endif %}">Все</a>
+                {% for slug, sec in sections.items() %}
+                <a href="/{{ slug }}" class="menu__item {% if current_slug == slug %}is-active{% endif %}">{{ sec.name }}</a>
+                {% endfor %}
+            </nav>
+        </div>
+    </header>
+
+    <div class="container layout">
+        <main class="content">
+            {% block content %}{% endblock %}
+        </main>
+        <aside class="aside">
+            <section class="panel">
+                <h3 class="panel__title">Курсы</h3>
+                {% if rates.usd_rub and rates.usd_rub > 0 %}
+                <div class="rate-line">
+                    <span>USD/RUB</span>
+                    <strong>{{ "%.2f"|format(rates.usd_rub) }} ₽</strong>
+                </div>
+                {% endif %}
+                {% for coin in rates.coins %}
+                <div class="rate-line">
+                    <span>{{ coin.symbol }}</span>
+                    <div>
+                        <strong>{{ coin.usd|fmtprice('usd') }}</strong>
+                        <small>{{ coin.rub|fmtprice('rub') }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+                <p class="panel__note">Обновлено {{ rates.updated }}</p>
+            </section>
+
+            <a href="{{ ad_url }}" class="panel panel--promo" target="_blank" rel="noopener">
+                <span class="panel__promo-label">Партнёр</span>
+                <strong>Oren Change</strong>
+                <p>{{ ad_text }}</p>
+                <span class="panel__promo-link">oren-change.com</span>
+            </a>
+
+            <section class="panel">
+                <h3 class="panel__title">Рубрики</h3>
+                <ul class="rubrics">
+                    {% for slug, sec in sections.items() %}
+                    <li><a href="/{{ slug }}">{{ sec.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </section>
+        </aside>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>{{ site_name }} — {{ site_tagline }}</p>
+        </div>
+    </footer>
+
+    <script>
+        function tick() {
+            const el = document.getElementById('clock');
+            if (el) el.textContent = new Date().toLocaleString('ru-RU', {
+                day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
+            });
+        }
+        tick(); setInterval(tick, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ site_name }} — главные новости{% endblock %}
+
+{% block content %}
+{% for slug, sec in sections.items() %}
+{% set top = top_by_section.get(slug, []) %}
+{% if top %}
+<section class="block">
+    <header class="block__head">
+        <h2><a href="/{{ slug }}">{{ sec.name }}</a></h2>
+        <a href="/{{ slug }}" class="block__more">Все материалы</a>
+    </header>
+    <ul class="block__list">
+        {% for art in top[:4] %}
+        <li>
+            <time>{{ art.published_at|fmtshort }}</time>
+            <a href="{{ url_for('article', slug=art.slug) }}">{{ art.title }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+{% endfor %}
+
+<section class="block">
+    <header class="block__head">
+        <h1>Лента новостей</h1>
+        <span class="block__count">{{ total }} материалов</span>
+    </header>
+    {% include "partials/feed_list.html" %}
+    {% if total_pages > 1 %}{% include "partials/pagination.html" %}{% endif %}
+</section>
+{% endblock %}

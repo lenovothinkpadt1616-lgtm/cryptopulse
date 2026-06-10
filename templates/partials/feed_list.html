@@ -1,0 +1,27 @@
+{% if articles %}
+<ul class="news-list">
+    {% for art in articles %}
+    <li class="news-item">
+        <a href="{{ url_for('article', slug=art.slug) }}" class="news-item__link">
+            {% if art.image_url %}
+            <div class="news-item__img">
+                <img src="{{ art.image_url }}" alt="" loading="lazy" onerror="this.closest('.news-item__img').remove()">
+            </div>
+            {% endif %}
+            <div class="news-item__body">
+                <div class="news-item__meta">
+                    <span class="tag tag--{{ art.category_slug }}">{{ art.category }}</span>
+                    <time>{{ art.published_at|fmtdate }}</time>
+                </div>
+                <h2 class="news-item__title">{{ art.title }}</h2>
+                {% if art.summary %}
+                <p class="news-item__lead">{{ art.summary[:280] }}{% if art.summary|length > 280 %}…{% endif %}</p>
+                {% endif %}
+            </div>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="empty">Материалов пока нет.</p>
+{% endif %}
