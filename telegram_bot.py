@@ -358,9 +358,12 @@ def run_bot() -> None:
         logger.warning("Telegram bot disabled")
         return
 
-    # Python 3.10+ в отдельном потоке требует свой event loop
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
     logger.info("Telegram bot starting...")
-    build_bot_app().run_polling(drop_pending_updates=True)
+
+    build_bot_app().run_polling(
+        drop_pending_updates=True,
+        stop_signals=None,
+    )
