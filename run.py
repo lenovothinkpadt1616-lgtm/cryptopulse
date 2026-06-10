@@ -1,12 +1,13 @@
 """Запуск: сайт + бот + автопарсинг каждые 2 часа."""
 
 import logging
+import os
 import threading
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app import create_app
-from config import HOST, PARSE_INTERVAL_MINUTES, PORT, TELEGRAM_BOT_TOKEN
+from config import HOST, PARSE_INTERVAL_MINUTES, TELEGRAM_BOT_TOKEN
 from database import init_db
 from parser import parse_all
 from rates import refresh_rates
@@ -21,41 +22,75 @@ logger = logging.getLogger("novosti")
 
 def job_parse():
     logger.info("=== Scheduled parse ===")
-    result = parse_all()
-    logger.info("Parse done: +%d articles", result["added"])
+    try:
+        result = parse_all()
+        logger.info("Parse done: +%d articles", result.get("added", 0))
+    except Exception as e:
+        logger.error("Scheduled parse failed: %s", e)
 
 
 def _startup_parse():
     """Парсинг в фоне — не блокирует запуск сайта."""
     logger.info("Background parse started...")
     try:
-        r = parse_all()
-        logger.info("Background parse done: +%d", r["added"])
+        result = parse_all()
+        logger.info("Background parse done: +%d", result.get("added", 0))
     except Exception as e:
         logger.error("Background parse failed: %s", e)
+
+
+def _refresh_rates_safe():
+    try:
+        refresh_rates()
+    except Exception as e:
+        logger.error("Rates refresh failed: %s", e)
+
+
+def _run_bot_safe():
+    try:
+        run_bot()
+    except Exception as e:
+        logger.error("Telegram bot failed: %s", e)
 
 
 def main():
     init_db()
 
     threading.Thread(target=_startup_parse, daemon=True).start()
-    threading.Thread(target=refresh_rates, daemon=True).start()
+    threading.Thread(target=_refresh_rates_safe, daemon=True).start()
 
     scheduler = BackgroundScheduler()
-    scheduler.add_job(job_parse, "interval", minutes=PARSE_INTERVAL_MINUTES, id="parse")
+    scheduler.add_job(
+        job_parse,
+        "interval",
+        minutes=PARSE_INTERVAL_MINUTES,
+        id="parse",
+        replace_existing=True,
+    )
     scheduler.start()
     logger.info("Auto-parse every %d min", PARSE_INTERVAL_MINUTES)
 
     if TELEGRAM_BOT_TOKEN:
-        threading.Thread(target=run_bot, daemon=True).start()
+        threading.Thread(target=_run_bot_safe, daemon=True).start()
         logger.info("Telegram bot starting in background")
     else:
         logger.warning("No TELEGRAM_BOT_TOKEN — bot off")
 
     flask_app = create_app()
-    print(f"\n✅ Сайт запущен: http://127.0.0.1:{PORT}")
-    print(f"   (парсинг идёт в фоне, подожди 1-2 мин для новых статей)\n")
-    flask_app.run(host=HOST, port=PORT, debug=False, use_reloader=False)
+
+    port = int(os.environ.get("PORT", "10000"))
+    host = os.environ.get("HOST", HOST or "0.0.0.0")
+
+    logger.info("Starting site on %s:%d", host, port)
+    print(f"\n✅ Сайт запущен: http://{host}:{port}")
+    print("   Парсинг идёт в фоне, подожди 1-2 мин для новых статей\n")
+
+    flask_app.run(
+        host=host,
+        port=port,
+        debug=False,
+        use_reloader=False,
+    )
 
 
 if __name__ == "__main__":
