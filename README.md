@@ -32,7 +32,7 @@ copy .env.example .env
 ```env
 SITE_NAME=CryptoPulse
 TELEGRAM_BOT_TOKEN=...     # от @BotFather
-ADMIN_USER_ID=...         # от @userinfobot
+ADMIN_USER_IDS=123456789,987654321   # ID админов через запятую (от @userinfobot). Можно одного или нескольких.
 SITE_URL=http://localhost:5000
 ```
 
@@ -50,7 +50,7 @@ python run.py
 
 ## Telegram-бот
 
-Только для `ADMIN_USER_ID`.
+Только для админов из `ADMIN_USER_IDS` (один или несколько ID через запятую).
 
 | Команда | Действие |
 |---------|----------|
@@ -137,7 +137,7 @@ nano .env
 SITE_NAME=CryptoPulse
 SITE_URL=https://твой-домен.ru
 TELEGRAM_BOT_TOKEN=...
-ADMIN_USER_ID=...
+ADMIN_USER_IDS=123456789,987654321   # один или несколько через запятую
 SECRET_KEY=длинная-случайная-строка-32-символа
 HOST=0.0.0.0
 PORT=5000

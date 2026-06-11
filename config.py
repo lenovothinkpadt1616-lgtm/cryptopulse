@@ -57,7 +57,30 @@ DB_PATH = BASE_DIR / "data" / "news.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-ADMIN_USER_ID = int(os.getenv("ADMIN_USER_ID", "0"))
+
+def _get_admin_ids() -> set[int]:
+    """Поддержка нескольких админов через запятую.
+    Приоритет: ADMIN_USER_IDS=123,456,789
+    Fallback: ADMIN_USER_ID=123 (обратная совместимость).
+    """
+    raw = os.getenv("ADMIN_USER_IDS") or os.getenv("ADMIN_USER_ID", "0")
+    ids: set[int] = set()
+    for token in str(raw).replace(";", ",").split(","):
+        token = token.strip()
+        if not token:
+            continue
+        try:
+            val = int(token)
+            if val > 0:
+                ids.add(val)
+        except (ValueError, TypeError):
+            pass
+    return ids
+
+ADMIN_USER_IDS: set[int] = _get_admin_ids()
+
+# Для обратной совместимости (если где-то импортируют старое имя)
+ADMIN_USER_ID: int = next(iter(ADMIN_USER_IDS)) if ADMIN_USER_IDS else 0
 
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
 HOST = os.getenv("HOST", "0.0.0.0")

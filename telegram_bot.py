@@ -17,7 +17,7 @@ from telegram.ext import (
     filters,
 )
 
-from config import ADMIN_USER_ID, SECTIONS, SITE_URL, TELEGRAM_BOT_TOKEN
+from config import ADMIN_USER_IDS, SECTIONS, SITE_URL, TELEGRAM_BOT_TOKEN
 from database import add_article, delete_article, get_article, get_recent_for_admin, get_stats
 from parser import parse_all
 
@@ -29,7 +29,7 @@ _drafts: dict[int, dict] = {}
 
 
 def is_admin(uid: int) -> bool:
-    return uid == ADMIN_USER_ID
+    return uid in ADMIN_USER_IDS
 
 
 def _section_keyboard() -> InlineKeyboardMarkup:
@@ -354,7 +354,7 @@ def build_bot_app() -> Application:
 def run_bot() -> None:
     import asyncio
 
-    if not TELEGRAM_BOT_TOKEN or not ADMIN_USER_ID:
+    if not TELEGRAM_BOT_TOKEN or not ADMIN_USER_IDS:
         logger.warning("Telegram bot disabled")
         return
 
