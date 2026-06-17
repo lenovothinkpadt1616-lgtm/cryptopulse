@@ -53,7 +53,7 @@ FETCH_FULL_ON_PARSE = os.getenv("FETCH_FULL_ON_PARSE", "false").lower() == "true
 RATES_CACHE_MINUTES = int(os.getenv("RATES_CACHE_MINUTES", "15"))
 COINS = ["bitcoin", "ethereum", "tether", "the-open-network", "binancecoin"]
 
-DB_PATH = BASE_DIR / "data" / "news.db"
+DB_PATH = Path(os.getenv("DB_PATH", BASE_DIR / "data" / "news.db"))
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")

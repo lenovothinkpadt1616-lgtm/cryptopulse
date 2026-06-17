@@ -244,12 +244,14 @@ def trim_old_articles(max_count: int) -> int:
         if count <= max_count:
             return 0
         excess = count - max_count
-        conn.execute(
+        cur = conn.execute(
             """
             DELETE FROM articles WHERE id IN (
-                SELECT id FROM articles ORDER BY published_at ASC LIMIT ?
+                SELECT id FROM articles
+                WHERE source != 'manual' OR source IS NULL
+                ORDER BY published_at ASC LIMIT ?
             )
             """,
             (excess,),
         )
-        return excess
+        return cur.rowcount
