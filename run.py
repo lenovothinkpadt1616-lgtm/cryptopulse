@@ -71,9 +71,13 @@ def main():
     scheduler.start()
     logger.info("Auto-parse every %d min", PARSE_INTERVAL_MINUTES)
 
-    if TELEGRAM_BOT_TOKEN:
+    bot_enabled = os.getenv("ENABLE_TELEGRAM_BOT", "true").lower() not in ("0", "false", "no")
+
+    if TELEGRAM_BOT_TOKEN and bot_enabled:
         threading.Thread(target=_run_bot_safe, daemon=True).start()
         logger.info("Telegram bot starting in background")
+    elif TELEGRAM_BOT_TOKEN and not bot_enabled:
+        logger.warning("ENABLE_TELEGRAM_BOT=false - bot off")
     else:
         logger.warning("No TELEGRAM_BOT_TOKEN — bot off")
 

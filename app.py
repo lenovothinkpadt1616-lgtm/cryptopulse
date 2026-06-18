@@ -1,6 +1,7 @@
 """Flask — новостной сайт."""
 
 import logging
+import os
 import traceback
 from datetime import datetime
 
@@ -20,6 +21,8 @@ from database import (
     count_articles,
     get_article_by_slug,
     get_feed,
+    get_stats,
+    get_storage_status,
     get_top_by_section,
     init_db,
 )
@@ -186,9 +189,18 @@ def section_feed(slug: str):
 
 @app.route("/health")
 def health():
+    stats = get_stats()
     return {
         "status": "ok",
         "articles": count_articles(),
+        "manual_articles": stats["manual"],
+        "render": {
+            "service_id": os.getenv("RENDER_SERVICE_ID", ""),
+            "service_name": os.getenv("RENDER_SERVICE_NAME", ""),
+            "instance_id": os.getenv("RENDER_INSTANCE_ID", ""),
+            "git_commit": os.getenv("RENDER_GIT_COMMIT", ""),
+        },
+        "storage": get_storage_status(),
     }
 
 

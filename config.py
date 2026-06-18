@@ -58,6 +58,14 @@ DB_PATH = Path(_db_path_raw)
 if not DB_PATH.is_absolute():
     DB_PATH = BASE_DIR / DB_PATH
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+_manual_backup_raw = os.getenv(
+    "MANUAL_POSTS_BACKUP_PATH",
+    str(DB_PATH.parent / "manual_posts.json"),
+).strip().strip("\"'")
+MANUAL_POSTS_BACKUP_PATH = Path(_manual_backup_raw)
+if not MANUAL_POSTS_BACKUP_PATH.is_absolute():
+    MANUAL_POSTS_BACKUP_PATH = BASE_DIR / MANUAL_POSTS_BACKUP_PATH
+MANUAL_POSTS_BACKUP_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 

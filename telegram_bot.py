@@ -7,6 +7,7 @@ import re
 from datetime import datetime, timezone
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.error import Conflict
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
@@ -348,7 +349,18 @@ def build_bot_app() -> Application:
     app.add_handler(CommandHandler("parse", cmd_parse))
     app.add_handler(CommandHandler("delete", cmd_delete))
     app.add_handler(conv)
+    app.add_error_handler(bot_error)
     return app
+
+
+async def bot_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if isinstance(context.error, Conflict):
+        logger.error(
+            "Telegram token is used by another running bot instance. "
+            "Stop the duplicate service/local process or set ENABLE_TELEGRAM_BOT=false there."
+        )
+        return
+    logger.exception("Telegram bot error", exc_info=context.error)
 
 
 def run_bot() -> None:
